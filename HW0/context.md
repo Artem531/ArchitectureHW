@@ -18,9 +18,9 @@ Rel(admin, shop, "Добавление/просмотр информации о 
 Rel(seller, shop,"Создание новой услуги, получение заказа для пользователя")
 Rel(user, shop,"Получение списка услуг, добавление услуги в заказ")
 
-Rel(shop, order_checker, "Проверка новых заказов")
-Rel(shop, new_user_checker, "Проверка новых пользователей")
-Rel(shop, new_service_checker, "Проверка новых услуг")
+Rel(shop, order_checker, "Запрос новых заказов")
+Rel(shop, new_user_checker, "Запрос нового пользователя")
+Rel(shop, new_service_checker, "Запрос информации о новой услуге")
 
 @enduml
 ```

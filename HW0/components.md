@@ -36,7 +36,7 @@ Rel_L(new_service_service,new_service_checker,"Запрос информации
 Rel(new_service_service,db,,"INTSERT/SELECT/UPDATE","SQL")
 
 Rel(app,new_order_service,"Работа с заказами","http://localhost/order ")
-Rel_R(new_order_service,order_checker,"Проверка нового заказа")
+Rel_R(new_order_service,order_checker,"Запрос нового заказа")
 Rel(new_order_service,db,"INTSERT/SELECT/UPDATE","SQL")
 
 Rel(app,client_service,"Работа с новым пользователем","http://localhost/user ")
