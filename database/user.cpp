@@ -11,6 +11,9 @@
 
 #include <sstream>
 #include <exception>
+#include <algorithm>
+#include <future>
+#include <fstream>
 
 using namespace Poco::Data::Keywords;
 using Poco::Data::Session;
@@ -19,8 +22,98 @@ using Poco::Data::Statement;
 namespace database
 {
 
-    void User::init()
+        void User::init()
     {
+        std::cout << "init User \n";
+        try
+        {
+            Poco::Data::Session session = database::Database::get().create_session();
+            
+            Statement drop_stmt(session);
+            
+            // (re)create table
+            for (auto &hint : database::Database::get_all_hints())
+            {
+                Statement create_stmt(session);
+                create_stmt << "CREATE TABLE IF NOT EXISTS `User` (`id` INT NOT NULL AUTO_INCREMENT,"
+                            << "`first_name` VARCHAR(256) CHARACTER SET utf8 COLLATE utf8_unicode_ci NOT NULL,"
+                            << "`last_name` VARCHAR(256) CHARACTER SET utf8 COLLATE utf8_unicode_ci NOT NULL,"
+                            << "`email` VARCHAR(256) CHARACTER SET utf8 COLLATE utf8_unicode_ci NULL,"
+                            << "`title` VARCHAR(256) CHARACTER SET utf8 COLLATE utf8_unicode_ci NULL,"
+                            << "`type` VARCHAR(256) CHARACTER SET utf8 COLLATE utf8_unicode_ci NULL,"
+                            << "PRIMARY KEY (`id`), KEY `fn` (`first_name`), KEY `ln` (`last_name`));"
+                            << hint,
+                    now;
+            }
+        }
+
+        catch (Poco::Data::MySQL::ConnectionException &e)
+        {
+            std::cout << "connection:" << e.what() << std::endl;
+            throw;
+        }
+        catch (Poco::Data::MySQL::StatementException &e)
+        {
+
+            std::cout << "statement:" << e.what() << std::endl;
+            throw;
+        }
+    }
+    
+    void User::preload(const std::string &file)
+    {
+        try
+        {
+            Poco::Data::Session session = database::Database::get().create_session();
+            std::string json;
+            std::ifstream is(file);
+            std::istream_iterator<char> eos;
+            std::istream_iterator<char> iit(is);
+            while (iit != eos)
+                json.push_back(*(iit++));
+            is.close();
+
+            Poco::JSON::Parser parser;
+            Poco::Dynamic::Var result = parser.parse(json);
+            Poco::JSON::Array::Ptr arr = result.extract<Poco::JSON::Array::Ptr>();
+
+            size_t i{0};
+            for (i = 0; i < arr->size(); ++i)
+            {
+                Poco::JSON::Object::Ptr object = arr->getObject(i);
+                std::string first_name = object->getValue<std::string>("first_name");
+                std::string last_name = object->getValue<std::string>("last_name");
+                std::string email = object->getValue<std::string>("email");
+                std::string title = object->getValue<std::string>("title");
+                std::string type = object->getValue<std::string>("type");
+
+                std::string hint = database::Database::sharding_hint(email, first_name);
+
+                Poco::Data::Statement insert(session);
+                insert << "INSERT INTO User (first_name,last_name,email,title,type) VALUES(?, ?, ?, ?, ?)" << hint,
+                    Poco::Data::Keywords::use(first_name),
+                    Poco::Data::Keywords::use(last_name),
+                    Poco::Data::Keywords::use(email),
+                    Poco::Data::Keywords::use(title),
+                    Poco::Data::Keywords::use(type);
+
+                insert.execute();
+            }
+
+            std::cout << "Inserted " << i << " records" << std::endl;
+        }
+
+        catch (Poco::Data::MySQL::ConnectionException &e)
+        {
+            std::cout << "connection:" << e.what() << std::endl;
+            throw;
+        }
+        catch (Poco::Data::MySQL::StatementException &e)
+        {
+
+            std::cout << "statement:" << e.what() << std::endl;
+            throw;
+        }
     }
 
     Poco::JSON::Object::Ptr User::toJSON() const
@@ -53,65 +146,67 @@ namespace database
         return user;
     }
 
-    User User::read_by_id(long id)
+    User User::read_by_user_name(std::string user_name)
     {
         try
         {
-            Poco::Data::Session session = database::Database::get().create_session();
-            Poco::Data::Statement select(session);
-            User a;
-            select << "SELECT id, first_name, last_name, email, title, type FROM User where id=?",
-                into(a._id),
-                into(a._first_name),
-                into(a._last_name),
-                into(a._email),
-                into(a._title),
-                into(a._type),
-                use(id),
-                range(0, 1); //  iterate over result set one row at a time
-  
-            select.execute();
-            Poco::Data::RecordSet rs(select);
-            if (!rs.moveFirst()) throw std::logic_error("not found");
+            User result;
+            std::vector<std::string> hints = database::Database::get_all_hints();
 
-            return a;
-        }
+            std::vector<std::future<User>> futures;
 
-        catch (Poco::Data::MySQL::ConnectionException &e)
-        {
-            std::cout << "connection:" << e.what() << std::endl;
-            throw;
-        }
-        catch (Poco::Data::MySQL::StatementException &e)
-        {
-            std::cout << "statement:" << e.what() << std::endl;
-            throw;
-        }
-    }
-
-    std::vector<User> User::read_all()
-    {
-        try
-        {
-            Poco::Data::Session session = database::Database::get().create_session();
-            Statement select(session);
-            std::vector<User> result;
-            User a;
-            select << "SELECT id, first_name, last_name, email, title, type FROM User",
-                into(a._id),
-                into(a._first_name),
-                into(a._last_name),
-                into(a._email),
-                into(a._title),
-                into(a._type),
-                range(0, 1); //  iterate over result set one row at a time
-
-            while (!select.done())
+            // map phase in parallel
+            for (const std::string &hint : hints)
             {
-                if(select.execute())
-                result.push_back(a);
+                auto handle = std::async(std::launch::async, [user_name, hint]() -> User
+                                        {
+                                            Poco::Data::Session session = database::Database::get().create_session();
+                                            Statement select(session);
+                                            
+                                            User a;
+                                            
+                                            std::string select_str = "SELECT id, first_name, last_name, email, title, type FROM User where first_name='";
+                                            select_str += user_name;
+                                            select_str += "';";
+                                            select_str += hint;
+                                            select << select_str;
+
+                                            select.execute();
+                                            Poco::Data::RecordSet rs(select);
+                                            
+                                            if (!rs.moveFirst()) throw std::logic_error("not found");
+                                            std::cout << hint << "\n";
+                                            a.id() = rs[0].convert<long>();
+                                            a.first_name() = rs[1].convert<std::string>();
+                                            a.last_name() = rs[2].convert<std::string>();
+                                            a.email() = rs[3].convert<std::string>();
+                                            a.title() = rs[4].convert<std::string>();
+                                            a.type() = rs[5].convert<std::string>();
+                                            
+                                            return a; });
+
+                futures.emplace_back(std::move(handle));
             }
-            return result;
+
+            for (std::future<User> &res : futures)
+            {
+                bool exception_caught = false;
+                try
+                {
+                    result = res.get();
+                }
+                catch (std::exception& e)
+                {
+                    exception_caught = true;
+                }
+
+                if (!exception_caught)
+                {
+                    return result;
+                }
+            }
+
+            throw std::logic_error("not found");
         }
 
         catch (Poco::Data::MySQL::ConnectionException &e)
@@ -123,61 +218,78 @@ namespace database
         {
 
             std::cout << "statement:" << e.what() << std::endl;
+            std::cout << e.displayText() << std::endl;
+            std::cout << e.message() << std::endl;
             throw;
         }
     }
 
     std::vector<User> User::search(std::string first_name, std::string last_name)
     {
-        try
-        {
-            Poco::Data::Session session = database::Database::get().create_session();
-            Statement select(session);
-            std::vector<User> result;
-            User a;
-            first_name+="%";
-            last_name+="%";
-            select << "SELECT id, first_name, last_name, email, title, type FROM User where first_name LIKE ? and last_name LIKE ?",
-                into(a._id),
-                into(a._first_name),
-                into(a._last_name),
-                into(a._email),
-                into(a._title),
-                into(a._type),
-                use(first_name),
-                use(last_name),
-                range(0, 1); //  iterate over result set one row at a time
+        std::vector<User> result;
+        std::vector<std::string> hints = database::Database::get_all_hints();
 
-            while (!select.done())
-            {
-                if(select.execute())  result.push_back(a);
-            }
-            return result;
+        std::vector<std::future<std::vector<User>>> futures;
+        std::cout << "search \n";
+        // map phase in parallel
+        first_name+="%";
+        last_name+="%";
+        for (const std::string &hint : hints)
+        {
+            auto handle = std::async(std::launch::async, [first_name, last_name, hint]() -> std::vector<User>
+                                     {
+                                        std::vector<User> result;
+                                        Poco::Data::Session session = database::Database::get().create_session();
+                                        Statement select(session);
+                                        
+                                        std::string select_str = "SELECT id, first_name, last_name, email, title, type FROM User where first_name LIKE '";
+                                        select_str += first_name;
+                                        select_str += "' and last_name LIKE '";
+                                        select_str += last_name;
+                                        select_str += "'; ";
+                                        select_str += hint;
+                                        select << select_str;
+
+                                        select.execute();
+                                        Poco::Data::RecordSet rs(select);
+                                        
+                                        bool more = rs.moveFirst();
+                                        while( more ) {
+                                            User a;
+                                            a.id() = rs[0].convert<long>();
+                                            a.first_name() = rs[1].convert<std::string>();
+                                            a.last_name() = rs[2].convert<std::string>();
+                                            a.email() = rs[3].convert<std::string>();
+                                            a.title() = rs[4].convert<std::string>();
+                                            a.type() = rs[5].convert<std::string>();
+
+                                            result.push_back(a);
+                                            more = rs.moveNext();
+                                        }
+                                        return result; });
+
+            futures.emplace_back(std::move(handle));
         }
 
-        catch (Poco::Data::MySQL::ConnectionException &e)
+        for (std::future<std::vector<User>> &res : futures)
         {
-            std::cout << "connection:" << e.what() << std::endl;
-            throw;
+            std::vector<User> v = res.get();
+            std::copy(std::begin(v),
+                    std::end(v),
+                    std::back_inserter(result));
         }
-        catch (Poco::Data::MySQL::StatementException &e)
-        {
-
-            std::cout << "statement:" << e.what() << std::endl;
-            throw;
-        }
+        return result;
     }
 
-   
     void User::save_to_mysql()
     {
-
+        std::string hint = database::Database::sharding_hint(_email, _first_name);
         try
         {
             Poco::Data::Session session = database::Database::get().create_session();
             Poco::Data::Statement insert(session);
 
-            insert << "INSERT INTO User (first_name,last_name,email,title,type) VALUES(?, ?, ?, ?, ?)",
+            insert << "INSERT INTO User (first_name,last_name,email,title,type) VALUES(?, ?, ?, ?, ?)"  << hint,
                 use(_first_name),
                 use(_last_name),
                 use(_email),

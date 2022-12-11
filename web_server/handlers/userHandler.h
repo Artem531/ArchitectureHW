@@ -110,17 +110,18 @@ public:
         {
             try
             {
-                
+                response.setStatus(Poco::Net::HTTPResponse::HTTP_OK);
+                response.setChunkedTransferEncoding(true);
+                response.setContentType("application/json");
+                std::ostream &ostr = response.send();
+
                 std::string fn = form.get("first_name");
                 std::string ln = form.get("last_name");
                 auto results = database::User::search(fn, ln);
                 Poco::JSON::Array arr;
                 for (auto s : results)
                     arr.add(s.toJSON());
-                response.setStatus(Poco::Net::HTTPResponse::HTTP_OK);
-                response.setChunkedTransferEncoding(true);
-                response.setContentType("application/json");
-                std::ostream &ostr = response.send();
+      
                 Poco::JSON::Stringifier::stringify(arr, ostr);
             }
             catch (...)
@@ -138,6 +139,7 @@ public:
             std::cout << "/user \n";
             if (request.getMethod() == Poco::Net::HTTPRequest::HTTP_POST)
             {
+                std::cout << "post\n";
                 if (
                     form.has("first_name") && \
                     form.has("last_name") && \
@@ -214,7 +216,35 @@ public:
                     }
                 }
             }
+            else
+            {
+                std::cout << "!!!!!!!!!!!! \n";
+                if (form.has("user_name"))
+                {
+                    std::string user_name = form.get("user_name").c_str();
+                    try
+                    {
+                        response.setStatus(Poco::Net::HTTPResponse::HTTP_OK);
+                        response.setChunkedTransferEncoding(true);
+                        response.setContentType("application/json");
+                        std::ostream &ostr = response.send();
+                        std::cout << "read by id \n";
+                        database::User result = database::User::read_by_user_name(user_name);
+                        Poco::JSON::Stringifier::stringify(result.toJSON(), ostr);
+                        return;
+                    }
+                    catch (...)
+                    {
+                        response.setStatus(Poco::Net::HTTPResponse::HTTP_NOT_FOUND);
+                        std::ostream &ostr = response.send();
+                        ostr << "{ \"result\": false , \"reason\": \"not found\" }";
+                        response.send();
+                        return;
+                    }
+                }
+            }
         }
+        
         response.setStatus(Poco::Net::HTTPResponse::HTTP_NOT_FOUND);
         std::ostream &ostr = response.send();
         ostr << "request error";

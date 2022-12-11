@@ -21,6 +21,46 @@ namespace database
 
     void Order::init()
     {
+        try
+        {
+            std::cout << "\n init order \n";
+            Poco::Data::Session session = database::Database::get().create_session();
+            
+        
+            Statement create_stmt(session);
+            create_stmt << "CREATE TABLE IF NOT EXISTS `UserOrder` ("
+                        << "`id` INT NOT NULL AUTO_INCREMENT,"
+                        << "`user_id` INT NOT NULL,"
+                        << "PRIMARY KEY (`id`),"
+                        << "FOREIGN KEY (`user_id`) REFERENCES `User`(`id`) ON UPDATE CASCADE ON DELETE CASCADE);",
+
+                now;
+            
+
+            std::cout << "\n init service order \n";
+            Statement create_service_order_table(session);
+            create_service_order_table << "CREATE TABLE IF NOT EXISTS `Service_Order` ("
+                        << "`id` INT NOT NULL AUTO_INCREMENT,"
+                        << "`service_id` INT NOT NULL,"
+                        << "`order_id` INT NOT NULL,"
+                        << "PRIMARY KEY (`id`),"
+                        << "FOREIGN KEY (`service_id`) REFERENCES `Service`(`id`) ON UPDATE CASCADE ON DELETE CASCADE,"
+                        << "FOREIGN KEY (`order_id`) REFERENCES `UserOrder`(`id`) ON UPDATE CASCADE ON DELETE CASCADE);",
+                now;
+            
+        }
+
+        catch (Poco::Data::MySQL::ConnectionException &e)
+        {
+            std::cout << "connection:" << e.what() << std::endl;
+            throw;
+        }
+        catch (Poco::Data::MySQL::StatementException &e)
+        {
+
+            std::cout << "statement:" << e.what() << std::endl;
+            throw;
+        }
     }
 
     Poco::JSON::Object::Ptr Order::toJSON() const

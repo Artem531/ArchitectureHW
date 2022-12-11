@@ -105,7 +105,20 @@ protected:
                 .required(false)
                 .repeatable(false)
                 .callback(OptionCallback<HTTPWebServer>(this, &HTTPWebServer::handleInitDB)));
-        
+        options.addOption(
+            Option("preload", "ppl", "preload initial values for author")
+                .required(false)
+                .repeatable(false)
+                .argument("value")
+                .callback(OptionCallback<HTTPWebServer>(this, &HTTPWebServer::handlePreLoad)));
+
+    }
+
+    void handlePreLoad([[maybe_unused]] const std::string &name,
+                       [[maybe_unused]] const std::string &value)
+    {
+        std::cout << "preloading ..." << value << std::endl;
+        database::User::preload(value);
     }
 
     void handleInitDB([[maybe_unused]] const std::string &name,
@@ -113,6 +126,8 @@ protected:
     {
         std::cout << "init db" << std::endl;
         database::User::init();
+        database::Order::init();
+        database::Service::init();
     }
     void handleLogin([[maybe_unused]] const std::string &name,
                      [[maybe_unused]] const std::string &value)

@@ -60,6 +60,34 @@ paths:
             application/json:
               schema:
                 $ref: '#/components/schemas/Error'
+    get:
+        summary: Read user by its user_name
+        parameters:
+        - name: user_name
+          description: user's name
+          in: query
+          required: true
+          schema:
+            type: string
+        responses:
+          201:
+            description: The user corresponding to the provided `user_name`
+            content:
+              application/json:
+                schema:
+                  $ref: '#/components/schemas/User'
+          404:
+            description: No item found for the provided `id`
+            content:
+              application/json:
+                schema:
+                  $ref: '#/components/schemas/Error'
+          500:
+            description: Unexpected error
+            content:
+              application/json:
+                schema:
+                  $ref: '#/components/schemas/Error'
   /user/search:
     get:
       summary: Find user by his first name and last name

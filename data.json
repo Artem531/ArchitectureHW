@@ -1,0 +1,37 @@
+[
+{ 
+"first_name":"Hayden",
+"last_name":"Lyon",
+"email":"Hayden_Lyon3215@hourpy.biz",
+"title":"Designer",
+"type":"admin"
+},
+{ 
+"first_name":"Aileen",
+"last_name":"Groves",
+"email":"Aileen_Groves937@supunk.biz",
+"title":"Inspector",
+"type":"admin"
+},
+{ 
+"first_name":"Kendra",
+"last_name":"Wade",
+"email":"Kendra_Wade347@nickia.com",
+"title":"Associate Professor",
+"type":"admin"
+},
+{ 
+"first_name":"Chuck",
+"last_name":"Freeburn",
+"email":"Chuck_Freeburn4650@joiniaa.com",
+"title":"Business Broker",
+"type":"admin"
+},
+{ 
+"first_name":"Boris",
+"last_name":"Vane",
+"email":"Boris_Vane832@gompie.com",
+"title":"Chef Manager",
+"type":"admin"
+}
+]

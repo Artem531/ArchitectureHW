@@ -21,6 +21,35 @@ namespace database
 
     void Service::init()
     {
+        try
+        {
+            std::cout << "init service \n";
+            Poco::Data::Session session = database::Database::get().create_session();
+            
+            Statement drop_stmt(session);
+            
+            
+            Statement create_stmt(session);
+            create_stmt << "CREATE TABLE IF NOT EXISTS `Service` (`id` INT NOT NULL AUTO_INCREMENT,"
+                        << "`service_special_id` VARCHAR(256) CHARACTER SET utf8 COLLATE utf8_unicode_ci NOT NULL,"
+                        << "`name` VARCHAR(256) CHARACTER SET utf8 COLLATE utf8_unicode_ci NOT NULL,"
+                        << "`price` DECIMAL(10, 2),"
+                        << "PRIMARY KEY (`id`), UNIQUE KEY `s` (`service_special_id`), KEY `n` (`name`));",
+                now;
+        
+        }
+
+        catch (Poco::Data::MySQL::ConnectionException &e)
+        {
+            std::cout << "connection:" << e.what() << std::endl;
+            throw;
+        }
+        catch (Poco::Data::MySQL::StatementException &e)
+        {
+
+            std::cout << "statement:" << e.what() << std::endl;
+            throw;
+        }
     }
 
     Poco::JSON::Object::Ptr Service::toJSON() const
