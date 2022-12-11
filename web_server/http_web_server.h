@@ -43,17 +43,19 @@ using Poco::Util::ServerApplication;
 class HTTPWebServer : public Poco::Util::ServerApplication
 {
 public:
-    HTTPWebServer() : _helpRequested(false){
+    HTTPWebServer() : _helpRequested( false ) 
+    {
     }
 
-    ~HTTPWebServer(){
+    ~HTTPWebServer() 
+    {
     }
 
 protected:
-    void initialize(Application &self)
+    void initialize( Application& self )
     {
         loadConfiguration();
-        ServerApplication::initialize(self);
+        ServerApplication::initialize( self );
     }
 
     void uninitialize()
@@ -61,137 +63,136 @@ protected:
         ServerApplication::uninitialize();
     }
 
-    void defineOptions(OptionSet &options)
+    void defineOptions( OptionSet& options )
     {
-        ServerApplication::defineOptions(options);
+        ServerApplication::defineOptions( options );
 
         options.addOption(
-            Option("help", "h", "display argument help information")
-                .required(false)
-                .repeatable(false)
-                .callback(OptionCallback<HTTPWebServer>(this, &HTTPWebServer::handleHelp)));
+            Option( "help", "h", "display argument help information" )
+                .required( false )
+                .repeatable( false )
+                .callback( OptionCallback<HTTPWebServer>( this, &HTTPWebServer::handleHelp ) ) );
         options.addOption(
-            Option("host", "h", "set ip address for dtabase")
-                .required(false)
-                .repeatable(false)
-                .argument("value")
-                .callback(OptionCallback<HTTPWebServer>(this, &HTTPWebServer::handleHost)));
+            Option( "host", "h", "set ip address for dtabase" )
+                .required( false )
+                .repeatable( false )
+                .argument( "value" )
+                .callback( OptionCallback<HTTPWebServer>( this, &HTTPWebServer::handleHost ) ) );
         options.addOption(
-            Option("port", "po", "set mysql port")
-                .required(false)
-                .repeatable(false)
-                .argument("value")
-                .callback(OptionCallback<HTTPWebServer>(this, &HTTPWebServer::handlePort)));
+            Option( "port", "po", "set mysql port" )
+                .required( false )
+                .repeatable( false )
+                .argument( "value" )
+                .callback( OptionCallback<HTTPWebServer>( this, &HTTPWebServer::handlePort ) ) );
         options.addOption(
-            Option("login", "lg", "set mysql login")
-                .required(false)
-                .repeatable(false)
-                .argument("value")
-                .callback(OptionCallback<HTTPWebServer>(this, &HTTPWebServer::handleLogin)));
+            Option( "login", "lg", "set mysql login" )
+                .required( false )
+                .repeatable( false )
+                .argument( "value" )
+                .callback(OptionCallback<HTTPWebServer>( this, &HTTPWebServer::handleLogin ) ) );
         options.addOption(
-            Option("password", "pw", "set mysql password")
-                .required(false)
-                .repeatable(false)
-                .argument("value")
-                .callback(OptionCallback<HTTPWebServer>(this, &HTTPWebServer::handlePassword)));
+            Option( "password", "pw", "set mysql password" )
+                .required( false )
+                .repeatable( false )
+                .argument( "value" )
+                .callback( OptionCallback<HTTPWebServer>( this, &HTTPWebServer::handlePassword ) ) );
         options.addOption(
-            Option("database", "db", "set mysql database")
-                .required(false)
-                .repeatable(false)
-                .argument("value")
-                .callback(OptionCallback<HTTPWebServer>(this, &HTTPWebServer::handleDatabase)));
+            Option( "database", "db", "set mysql database" )
+                .required( false )
+                .repeatable( false )
+                .argument( "value" )
+                .callback( OptionCallback<HTTPWebServer>( this, &HTTPWebServer::handleDatabase ) ) );
         options.addOption(
-            Option("init_db", "it", "create database tables")
-                .required(false)
-                .repeatable(false)
-                .callback(OptionCallback<HTTPWebServer>(this, &HTTPWebServer::handleInitDB)));
+            Option( "init_db", "it", "create database tables" )
+                .required( false )
+                .repeatable( false )
+                .callback( OptionCallback<HTTPWebServer>( this, &HTTPWebServer::handleInitDB ) ) );
         options.addOption(
-            Option("preload", "ppl", "preload initial values for author")
-                .required(false)
-                .repeatable(false)
-                .argument("value")
-                .callback(OptionCallback<HTTPWebServer>(this, &HTTPWebServer::handlePreLoad)));
+            Option( "preload", "ppl", "preload initial values for author" )
+                .required( false )
+                .repeatable( false )
+                .argument( "value" )
+                .callback( OptionCallback<HTTPWebServer>( this, &HTTPWebServer::handlePreLoad ) ) );
 
     }
 
-    void handlePreLoad([[maybe_unused]] const std::string &name,
-                       [[maybe_unused]] const std::string &value)
+    void handlePreLoad( [[maybe_unused]] const std::string& name,
+                       [[maybe_unused]] const std::string& value )
     {
         std::cout << "preloading ..." << value << std::endl;
-        database::User::preload(value);
+        database::User::preload( value );
     }
 
-    void handleInitDB([[maybe_unused]] const std::string &name,
-                      [[maybe_unused]] const std::string &value)
+    void handleInitDB( [[maybe_unused]] const std::string& name,
+                      [[maybe_unused]] const std::string& value )
     {
         std::cout << "init db" << std::endl;
         database::User::init();
         database::Order::init();
         database::Service::init();
     }
-    void handleLogin([[maybe_unused]] const std::string &name,
-                     [[maybe_unused]] const std::string &value)
+
+    void handleLogin( [[maybe_unused]] const std::string& name,
+                     [[maybe_unused]] const std::string& value )
     {
         std::cout << "login:" << value << std::endl;
         Config::get().login() = value;
     }
-    void handlePassword([[maybe_unused]] const std::string &name,
-                        [[maybe_unused]] const std::string &value)
+
+    void handlePassword( [[maybe_unused]] const std::string& name,
+                        [[maybe_unused]] const std::string& value )
     {
         std::cout << "password:" << value << std::endl;
         Config::get().password() = value;
     }
 
-     void handleDatabase([[maybe_unused]] const std::string &name,
-                         [[maybe_unused]] const std::string &value)
+     void handleDatabase( [[maybe_unused]] const std::string& name,
+                         [[maybe_unused]] const std::string& value )
     {
         std::cout << "database:" << value << std::endl;
         Config::get().database() = value;
     }   
-    void handlePort([[maybe_unused]] const std::string &name,
-                    [[maybe_unused]] const std::string &value)
+    void handlePort( [[maybe_unused]] const std::string& name,
+                    [[maybe_unused]] const std::string& value )
     {
         std::cout << "port:" << value << std::endl;
         Config::get().port() = value;
     }
 
-    void handleHost([[maybe_unused]] const std::string &name,
-                      [[maybe_unused]] const std::string &value)
+    void handleHost( [[maybe_unused]] const std::string& name,
+                    [[maybe_unused]] const std::string& value )
     {
         std::cout << "host:" << value << std::endl;
         Config::get().host() = value;
     }
 
-
-
-    void handleHelp([[maybe_unused]] const std::string &name,
-                    [[maybe_unused]] const std::string &value)
+    void handleHelp( [[maybe_unused]] const std::string& name,
+                    [[maybe_unused]] const std::string& value )
     {
-        HelpFormatter helpFormatter(options());
-        helpFormatter.setCommand(commandName());
-        helpFormatter.setUsage("OPTIONS");
+        HelpFormatter helpFormatter( options() );
+        helpFormatter.setCommand( commandName() );
+        helpFormatter.setUsage( "OPTIONS" );
         helpFormatter.setHeader(
-            "A web server that serves the current date and time.");
-        helpFormatter.format(std::cout);
+            "A web server that serves the current date and time." );
+        helpFormatter.format( std::cout );
         stopOptionsProcessing();
         _helpRequested = true;
     }
 
-    int main([[maybe_unused]] const std::vector<std::string> &args)
+    int main( [[maybe_unused]] const std::vector<std::string>& args )
     {
         std::cout << "main web server \n";
-        if (!_helpRequested)
-        {
+        if( !_helpRequested ) {
             unsigned short port = (unsigned short)
                                       config()
-                                          .getInt("HTTPWebServer.port", 80);
+                                          .getInt( "HTTPWebServer.port", 80 );
             std::string format(
-                config().getString("HTTPWebServer.format",
-                                   DateTimeFormat::SORTABLE_FORMAT));
+                config().getString( "HTTPWebServer.format",
+                                   DateTimeFormat::SORTABLE_FORMAT ) );
             
-            ServerSocket svs(Poco::Net::SocketAddress("0.0.0.0", port));
-            HTTPServer srv(new HTTPRequestFactory(format),
-                           svs, new HTTPServerParams);
+            ServerSocket svs( Poco::Net::SocketAddress( "0.0.0.0", port ) );
+            HTTPServer srv( new HTTPRequestFactory( format ),
+                           svs, new HTTPServerParams );
             
             srv.start();
             std::cout << "srv start \n";

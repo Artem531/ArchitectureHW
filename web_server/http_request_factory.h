@@ -50,19 +50,13 @@ public:
     {
     }
 
-    HTTPRequestHandler* createRequestHandler(
-        const HTTPServerRequest& request)
+    HTTPRequestHandler* createRequestHandler( const HTTPServerRequest& request )
     {
-        if (startsWith(request.getURI(), "/user"))
-        {
+        if( startsWith( request.getURI(), "/user" ) ) {
             return new UserHandler(_format);
-        }
-        else if (startsWith(request.getURI(), "/service"))
-        {
+        } else if( startsWith(request.getURI(), "/service" ) ) {
             return new ServiceHandler(_format);
-        }
-        else if (startsWith(request.getURI(), "/order"))
-        {
+        } else if( startsWith( request.getURI(), "/order" ) ) {
             return new OrderHandler(_format);
         }
         return 0;

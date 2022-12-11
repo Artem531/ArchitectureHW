@@ -16,7 +16,7 @@ namespace database
 
         public:
 
-            static Service fromJSON(const std::string & str);
+            static Service fromJSON( const std::string & str );
 
             long             get_id() const;
             const std::string &get_service_special_id() const;
@@ -29,10 +29,10 @@ namespace database
             double &price();
 
             static void init();
-            static Service read_by_id(long id);
-            static Service read_by_special_id(std::string service_special_id);
+            static Service read_by_id( long id );
+            static Service read_by_special_id( std::string service_special_id );
             static std::vector<Service> read_all();
-            static std::vector<Service> search(std::string name);
+            static std::vector<Service> search( std::string name );
             void save_to_mysql();
 
             Poco::JSON::Object::Ptr toJSON() const;

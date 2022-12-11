@@ -18,7 +18,7 @@ namespace database
 
         public:
 
-            static User fromJSON(const std::string & str);
+            static User fromJSON( const std::string& str );
 
             long             get_id() const;
             const std::string &get_first_name() const;
@@ -35,10 +35,10 @@ namespace database
             std::string &type();
 
             static void init();
-            static void preload(const std::string &file);
-            static User read_by_user_name(std::string user_name);
+            static void preload( const std::string& file );
+            static User read_by_user_name( const std::string& user_name );
            
-            static std::vector<User> search(std::string first_name, std::string last_name);
+            static std::vector<User> search( std::string& first_name, std::string& last_name );
             void save_to_mysql();
 
             Poco::JSON::Object::Ptr toJSON() const;

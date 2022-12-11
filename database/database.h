@@ -8,8 +8,8 @@
 #include <Poco/Data/SessionFactory.h>
 #include <Poco/Data/SessionPool.h>
 
-namespace database{
-    class Database{
+namespace database {
+    class Database {
         private:
             std::string _connection_string;
             std::unique_ptr<Poco::Data::SessionPool> _pool;
@@ -19,7 +19,7 @@ namespace database{
             static Database& get();
             Poco::Data::Session create_session();
             static int get_max_shard();
-            static std::string sharding_hint(std::string login, std::string name);
+            static std::string sharding_hint( const std::string& login, const std::string& name );
             static std::vector<std::string> get_all_hints();
     };
 }
