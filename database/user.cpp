@@ -1,6 +1,7 @@
 #include "user.h"
 #include "database.h"
 #include "../config/config.h"
+#include "../database/cache.h"
 
 #include <Poco/Data/MySQL/Connector.h>
 #include <Poco/Data/MySQL/MySQLException.h>
@@ -285,62 +286,82 @@ namespace database
         }
     }
 
+    std::optional<User> User::read_from_cache_by_user_name( const std::string& user_name ) {
+        try {
+            std::string result;
+            if ( database::Cache::get().get( user_name, result ) )
+                return fromJSON(result);
+            else
+                return std::optional<User>();
+        } catch ( std::exception* err ) {
+            std::cerr << "error:" << err->what() << std::endl;
+            throw;
+        }
+    }
+
+    void User::save_to_cache() {
+        std::stringstream ss;
+        Poco::JSON::Stringifier::stringify( toJSON(), ss );
+        std::string message = ss.str();
+        database::Cache::get().put( _email, message );
+    }
+
     long User::get_id() const
     {
         return _id;
     }
 
-    const std::string &User::get_first_name() const
+    const std::string& User::get_first_name() const
     {
         return _first_name;
     }
 
-    const std::string &User::get_last_name() const
+    const std::string& User::get_last_name() const
     {
         return _last_name;
     }
 
-    const std::string &User::get_email() const
+    const std::string& User::get_email() const
     {
         return _email;
     }
 
-    const std::string &User::get_title() const
+    const std::string& User::get_title() const
     {
         return _title;
     }
 
-    const std::string &User::get_type() const
+    const std::string& User::get_type() const
     {
         return _type;
     }
 
-    long &User::id()
+    long& User::id()
     {
         return _id;
     }
 
-    std::string &User::first_name()
+    std::string& User::first_name()
     {
         return _first_name;
     }
 
-    std::string &User::last_name()
+    std::string& User::last_name()
     {
         return _last_name;
     }
 
-    std::string &User::email()
+    std::string& User::email()
     {
         return _email;
     }
 
-    std::string &User::title()
+    std::string& User::title()
     {
         return _title;
     }
  
-    std::string &User::type()
+    std::string& User::type()
     {
         return _type;
     }

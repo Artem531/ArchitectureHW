@@ -3,6 +3,10 @@ cmake_minimum_required(VERSION 3.2)
 project(hl_event_server C CXX)
 
 SET (EXAMPLE_BINARY "ArchitectureHW")
+SET (STD_CXX "c++17")
+SET (REDISCPP_FLAGS "-DREDISCPP_HEADER_ONLY=ON")
+SET (CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -W -Wall -std=${STD_CXX} ${REDISCPP_FLAGS}")
+SET (CMAKE_CXX_FLAGS_RELEASE "-O3 -g0 -std=${STD_CXX} -Wall -DNDEBUG ${REDISCPP_FLAGS}")
 
 find_package(OpenSSL)
 find_package(GTest REQUIRED)
@@ -27,8 +31,8 @@ add_executable(${EXAMPLE_BINARY} main.cpp
                                  database/database.cpp
                                  database/user.cpp
                                  database/order.cpp
-                                 database/service.cpp)
-
+                                 database/service.cpp
+                                 database/cache.cpp)
 
 target_include_directories(${EXAMPLE_BINARY} PRIVATE "${CMAKE_BINARY_DIR}")
 target_compile_options(${EXAMPLE_BINARY} PRIVATE -Wall -Wextra -pedantic -Werror )
@@ -52,6 +56,6 @@ set(CPACK_GENERATOR DEB)
 set(CPACK_PACKAGE_VERSION_MAJOR "${PROJECT_VERSION_MAJOR}")
 set(CPACK_PACKAGE_VERSION_MINOR "${PROJECT_VERSION_MINOR}")
 set(CPACK_PACKAGE_VERSION_PATCH "${PROJECT_VERSION_PATCH}")
-set(CPACK_PACKAGE_CONTACT Dmitriy.Dzyuba@mts.ru)
+
 include(CPack)
 

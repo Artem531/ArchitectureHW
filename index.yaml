@@ -41,6 +41,12 @@ paths:
         required: true
         schema:
           type: string
+      - name: no_cache
+        description: turn off cache flag
+        in: query
+        required: false
+        schema:
+          type: boolean
       responses:
         201:
           description: Success! A new user created and Added
@@ -69,6 +75,12 @@ paths:
           required: true
           schema:
             type: string
+        - name: no_cache
+          description: turn off cache flag
+          in: query
+          required: false
+          schema:
+            type: boolean
         responses:
           201:
             description: The user corresponding to the provided `user_name`

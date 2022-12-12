@@ -126,6 +126,7 @@ public:
         } else if( startsWith( request.getURI(), "/user" ) ) {
             std::cout << "/user \n";
             if( request.getMethod() == Poco::Net::HTTPRequest::HTTP_POST ) {
+
                 std::cout << "post\n";
                 if ( form.has( "first_name" ) && form.has( "last_name" ) && form.has( "email" ) && form.has( "title" ) && form.has( "user_type" ) )
                     std::cout << "Check form ok \n";
@@ -136,7 +137,21 @@ public:
                 user.email() = form.get( "email" );
                 user.title() = form.get( "title" );
                 user.type() = form.get( "user_type" );
-                
+
+                bool use_cache = true;
+                if( form.has("no_cache" ) ) {
+                    if ( form.get( "no_cache" ) == "true" ) {
+                        use_cache = false;
+                    }
+                }
+
+                if ( use_cache ) {
+                    user.save_to_cache();
+                    std::cout << "Saved user " + user.first_name() + " in cache and database." << std::endl;
+                } else {
+                    std::cout << "Saved user " + user.first_name() + " in database." << std::endl;
+                }
+
                 std::cout << form.get( "first_name" ) <<
                     form.get( "last_name" ) <<
                     form.get( "email" )  << "\n";
@@ -188,14 +203,39 @@ public:
                 }  
             } else {
                 if( form.has( "user_name" ) ) {
-                    std::string user_name = form.get( "user_name" ).c_str();
                     try {
                         response.setStatus( Poco::Net::HTTPResponse::HTTP_OK );
                         response.setChunkedTransferEncoding( true );
                         response.setContentType( "application/json" );
                         std::ostream &ostr = response.send();
                         std::cout << "read by id \n";
+                        
+                        bool use_cache = true;
+                        if (form.has("no_cache")) {
+                            if ( form.get("no_cache") == "true" ) {
+                                use_cache = false;
+                            }
+                        }
+                        std::string user_name = form.get( "user_name" ).c_str();
+                        if( use_cache ) {
+                            try {
+                                std::optional<database::User> result = database::User::read_from_cache_by_user_name( user_name );
+                                if( result ) {
+                                    Poco::JSON::Stringifier::stringify( result->toJSON(), ostr );
+                                    std::cout << "Cache used for user " << user_name << std::endl;
+                                    return;
+                                }
+                            } catch (...) {
+                                std::cout << "Cache faild to find data for user " << user_name << std::endl;
+                            }
+                        }
+
                         database::User result = database::User::read_by_user_name( user_name );
+                        if( use_cache ) {
+                            result.save_to_cache();
+                            std::cout << "Update cache for user " << user_name << std::endl;
+                        }
+                        
                         Poco::JSON::Stringifier::stringify( result.toJSON(), ostr );
                         return;
                     } catch (...) {

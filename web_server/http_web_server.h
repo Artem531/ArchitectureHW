@@ -113,7 +113,19 @@ protected:
                 .repeatable( false )
                 .argument( "value" )
                 .callback( OptionCallback<HTTPWebServer>( this, &HTTPWebServer::handlePreLoad ) ) );
+        options.addOption(
+            Option( "cache", "cs", "set redis cache servers" )
+                .required( false )
+                .repeatable( false )
+                .argument( "value" )
+                .callback(OptionCallback<HTTPWebServer>( this, &HTTPWebServer::handleCacheServers ) ) );
+    }
 
+    void handleCacheServers( [[maybe_unused]] const std::string& name,
+                            [[maybe_unused]] const std::string& value )
+    {
+        std::cout << "cache servers:" << value << std::endl;
+        Config::get().cache_servers() = value;
     }
 
     void handlePreLoad( [[maybe_unused]] const std::string& name,
