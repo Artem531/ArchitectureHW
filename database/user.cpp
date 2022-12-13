@@ -16,6 +16,9 @@
 #include <future>
 #include <fstream>
 
+#include <mutex>
+#include <cppkafka/cppkafka.h>
+
 using namespace Poco::Data::Keywords;
 using Poco::Data::Session;
 using Poco::Data::Statement;
@@ -27,7 +30,7 @@ namespace database
         std::cout << "init User \n";
         
         try {
-            Poco::Data::Session session = database::Database::get().create_session();    
+            Poco::Data::Session session = database::Database::get().create_session_write();
             Statement drop_stmt( session );
             
             // (re)create table
@@ -55,7 +58,7 @@ namespace database
     void User::preload( const std::string &file )
     {
         try {
-            Poco::Data::Session session = database::Database::get().create_session();
+            Poco::Data::Session session = database::Database::get().create_session_write();
             std::string json;
             std::ifstream is( file );
             std::istream_iterator<char> eos;
@@ -142,7 +145,7 @@ namespace database
             for (const std::string &hint : hints) {
                 auto handle = std::async( std::launch::async, [user_name, hint]() -> User
                                         {
-                                            Poco::Data::Session session = database::Database::get().create_session();
+                                            Poco::Data::Session session = database::Database::get().create_session_read();
                                             Statement select(session);
                                             
                                             User a;
@@ -209,7 +212,7 @@ namespace database
         for ( const std::string &hint : hints ) {
             auto handle = std::async(std::launch::async, [first_name, last_name, hint]() -> std::vector<User> {
                                         std::vector<User> result;
-                                        Poco::Data::Session session = database::Database::get().create_session();
+                                        Poco::Data::Session session = database::Database::get().create_session_read();
                                         Statement select(session);
                                         
                                         std::string select_str = "SELECT id, first_name, last_name, email, title, type FROM User where first_name LIKE '";
@@ -254,7 +257,7 @@ namespace database
     {
         std::string hint = database::Database::sharding_hint( _email, _first_name );
         try {
-            Poco::Data::Session session = database::Database::get().create_session();
+            Poco::Data::Session session = database::Database::get().create_session_write();
             Poco::Data::Statement insert(session);
 
             insert << "INSERT INTO User (first_name,last_name,email,title,type) VALUES(?, ?, ?, ?, ?)"  << hint,
@@ -304,6 +307,48 @@ namespace database
         Poco::JSON::Stringifier::stringify( toJSON(), ss );
         std::string message = ss.str();
         database::Cache::get().put( _email, message );
+    }
+
+
+    void User::send_to_queue()
+    {
+       /** static cppkafka::Configuration config = [&](){
+            cppkafka::Configuration config={
+            {"metadata.broker.list", Config::get().get_queue_host()}};
+            std::vector<cppkafka::ConfigurationOption> options;
+            options.push_back({"acks","all"});
+            config.set(options);
+            std::cout << "kafka configured" << std::endl;
+            return config;
+        }();*/
+        static cppkafka::Configuration config = {
+            { "metadata.broker.list", Config::get().get_queue_host() },
+            { "acks","all" } };
+
+        static cppkafka::Producer producer( config );
+        static std::mutex mtx;
+        static int message_key{ 0 };
+        using Hdr = cppkafka::MessageBuilder::HeaderType;
+        
+        std::lock_guard<std::mutex> lock( mtx );
+        std::stringstream ss;
+        Poco::JSON::Stringifier::stringify( toJSON(), ss );
+        std::string message = ss.str();
+        bool not_sent = true;
+
+        cppkafka::MessageBuilder builder( Config::get().get_queue_topic() );
+        std::string mk=std::to_string( ++message_key );
+        builder.key( mk ); // set some key
+        builder.header( Hdr{ "producer_type","author writer" } ); // set some custom header
+        builder.payload( message ); // set message
+
+        while ( not_sent ) {
+            try {
+                producer.produce( builder );
+                not_sent = false;
+            }
+            catch (...) {}
+        }
     }
 
     long User::get_id() const

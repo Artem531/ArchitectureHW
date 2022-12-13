@@ -33,11 +33,11 @@ namespace database {
     
     std::vector<std::string> Database::get_all_hints() {
         std::vector<std::string> result;
-        for( int i=0; i < get_max_shard(); ++i ) {
+        for( int i = 0; i < get_max_shard(); ++i ) {
             std::string shard_name = "-- sharding:";
-            shard_name += std::to_string(i);
+            shard_name += std::to_string( i );
             std::cout << shard_name;
-            result.push_back(shard_name);
+            result.push_back( shard_name );
         }
         return result;
     }
@@ -52,5 +52,19 @@ namespace database {
         result += std::to_string( shard_number );
 
         return result;
+    }
+
+    Poco::Data::Session Database::create_session_read()
+    {
+        return Poco::Data::Session( 
+            Poco::Data::SessionFactory::instance().create( 
+                Poco::Data::MySQL::Connector::KEY, _connection_string_read ) );
+    }
+
+    Poco::Data::Session Database::create_session_write()
+    {
+        return Poco::Data::Session(
+            Poco::Data::SessionFactory::instance().create(
+                Poco::Data::MySQL::Connector::KEY, _connection_string_write ) );
     }
 }

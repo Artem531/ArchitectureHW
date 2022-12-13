@@ -17,7 +17,7 @@ namespace database
             std::string _type;
 
         public:
-
+            Poco::JSON::Object::Ptr toJSON() const;
             static User fromJSON( const std::string& str );
 
             long             get_id() const;
@@ -43,8 +43,7 @@ namespace database
             void save_to_mysql();
             void save_to_cache();
             
-            Poco::JSON::Object::Ptr toJSON() const;
-
+            void send_to_queue();
     };
 }
 

@@ -180,7 +180,12 @@ public:
 
                 if( check_result ) {
                     try {
-                        user.save_to_mysql();
+                        //user.save_to_mysql();
+                        
+                        static int i=0;
+                        user.send_to_queue();
+                        std::cout << "send to queue: " << std::to_string(++i)  << std::endl;
+                        
                         response.setStatus( Poco::Net::HTTPResponse::HTTP_CREATED );
                         response.setChunkedTransferEncoding( true );
                         response.setContentType( "application/json" );
