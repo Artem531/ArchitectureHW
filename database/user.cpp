@@ -312,7 +312,7 @@ namespace database
         std::stringstream ss;
         Poco::JSON::Stringifier::stringify( toJSON(), ss );
         std::string message = ss.str();
-        database::Cache::get().put( _email, message );
+        database::Cache::get().put( _first_name, message );
     }
 
 
