@@ -22,7 +22,7 @@ namespace database
     void Order::init() {
         try {
             std::cout << "\n init order \n";
-            Poco::Data::Session session = database::Database::get().create_session();
+            Poco::Data::Session session = database::Database::get().create_session_write();
         
             Statement create_stmt( session );
             create_stmt << "CREATE TABLE IF NOT EXISTS `UserOrder` ("
@@ -77,7 +77,7 @@ namespace database
     std::vector<Order> Order::read_by_id( long id )
     {
         try {
-            Poco::Data::Session session = database::Database::get().create_session();
+            Poco::Data::Session session = database::Database::get().create_session_read();
             Poco::Data::Statement select( session );
             std::vector<Order> result;
             Order a;
@@ -106,7 +106,7 @@ namespace database
     std::vector<Order> Order::read_all()
     {
         try {
-            Poco::Data::Session session = database::Database::get().create_session();
+            Poco::Data::Session session = database::Database::get().create_session_read();
             Statement select( session );
             std::vector<Order> result;
             Order a;
@@ -133,7 +133,7 @@ namespace database
     void Order::add_to_order( long _id, long _service_id )
     {
         try {
-            Poco::Data::Session session = database::Database::get().create_session();
+            Poco::Data::Session session = database::Database::get().create_session_write();
             Poco::Data::Statement insert( session );
 
             insert << "INSERT INTO Service_Order (service_id, order_id) VALUES(?, ?)",
@@ -155,7 +155,7 @@ namespace database
     void Order::save_to_mysql()
     {
         try {
-            Poco::Data::Session session = database::Database::get().create_session();
+            Poco::Data::Session session = database::Database::get().create_session_write();
             Poco::Data::Statement insert( session );
 
             insert << "INSERT INTO UserOrder (user_id) VALUES (?)",

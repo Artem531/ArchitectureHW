@@ -23,9 +23,8 @@ namespace database
     {
         try {
             std::cout << "init service \n";
-            Poco::Data::Session session = database::Database::get().create_session();
+            Poco::Data::Session session = database::Database::get().create_session_write();
             
-            Statement drop_stmt(session);
             Statement create_stmt(session);
             create_stmt << "CREATE TABLE IF NOT EXISTS `Service` (`id` INT NOT NULL AUTO_INCREMENT,"
                         << "`service_special_id` VARCHAR(256) CHARACTER SET utf8 COLLATE utf8_unicode_ci NOT NULL,"
@@ -72,7 +71,7 @@ namespace database
     Service Service::read_by_id( long id )
     {
         try {
-            Poco::Data::Session session = database::Database::get().create_session();
+            Poco::Data::Session session = database::Database::get().create_session_read();
             Poco::Data::Statement select( session );
             Service a;
             select << "SELECT id, service_special_id, name, price FROM Service where id=?",
@@ -103,7 +102,7 @@ namespace database
     Service Service::read_by_special_id(std::string service_special_id)
 {
         try {
-            Poco::Data::Session session = database::Database::get().create_session();
+            Poco::Data::Session session = database::Database::get().create_session_read();
             Poco::Data::Statement select( session );
             Service a;
             select << "SELECT id, service_special_id, name, price FROM Service where service_special_id=?",
@@ -133,7 +132,7 @@ namespace database
     std::vector<Service> Service::read_all()
     {
         try {
-            Poco::Data::Session session = database::Database::get().create_session();
+            Poco::Data::Session session = database::Database::get().create_session_read();
             Statement select( session );
             std::vector<Service> result;
             Service a;
@@ -165,7 +164,7 @@ namespace database
     std::vector<Service> Service::search( std::string name )
     {
         try {
-            Poco::Data::Session session = database::Database::get().create_session();
+            Poco::Data::Session session = database::Database::get().create_session_read();
             Statement select( session );
             std::vector<Service> result;
             Service a;
@@ -195,7 +194,7 @@ namespace database
     void Service::save_to_mysql()
     {
         try {
-            Poco::Data::Session session = database::Database::get().create_session();
+            Poco::Data::Session session = database::Database::get().create_session_write();
             Poco::Data::Statement insert(session);
 
             insert << "INSERT INTO Service (service_special_id, name, price) VALUES(?, ?, ?)",

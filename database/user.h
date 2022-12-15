@@ -4,6 +4,7 @@
 #include <string>
 #include <vector>
 #include "Poco/JSON/Object.h"
+#include <optional>
 
 namespace database
 {

@@ -18,6 +18,7 @@
 
 #include <mutex>
 #include <cppkafka/cppkafka.h>
+#include <optional>
 
 using namespace Poco::Data::Keywords;
 using Poco::Data::Session;
@@ -31,11 +32,16 @@ namespace database
         
         try {
             Poco::Data::Session session = database::Database::get().create_session_write();
+            // Poco::Data::Session session = database::Database::get().create_session();
+            std::cout << "created session \n";
+            
             Statement drop_stmt( session );
             
             // (re)create table
             for ( auto &hint : database::Database::get_all_hints() ) {
                 Statement create_stmt( session );
+                std::cout << "create table \n";
+            
                 create_stmt << "CREATE TABLE IF NOT EXISTS `User` (`id` INT NOT NULL AUTO_INCREMENT,"
                             << "`first_name` VARCHAR(256) CHARACTER SET utf8 COLLATE utf8_unicode_ci NOT NULL,"
                             << "`last_name` VARCHAR(256) CHARACTER SET utf8 COLLATE utf8_unicode_ci NOT NULL,"

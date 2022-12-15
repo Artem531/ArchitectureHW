@@ -15,7 +15,17 @@ int main(int argc, char *argv[])
     try
     {
         po::options_description desc{"Options"};
-        desc.add_options()("help,h", "This screen")("read,", po::value<std::string>()->required(), "set ip address for read requests")("write,", po::value<std::string>()->required(), "set ip address for write requests")("port,", po::value<std::string>()->required(), "databaase port")("login,", po::value<std::string>()->required(), "database login")("password,", po::value<std::string>()->required(), "database password")("database,", po::value<std::string>()->required(), "database name")("queue,", po::value<std::string>()->required(), "queue url")("topic,", po::value<std::string>()->required(), "topic name")("group_id,", po::value<std::string>()->required(), "consumer group_id name")("cache_servers,", po::value<std::string>()->required(), "iginite cache servers");
+        desc.add_options()("help,h", "This screen")
+        ("read,", po::value<std::string>()->required(), "set ip address for read requests")
+        ("write,", po::value<std::string>()->required(), "set ip address for write requests")
+        ("port,", po::value<std::string>()->required(), "databaase port")
+        ("login,", po::value<std::string>()->required(), "database login")
+        ("password,", po::value<std::string>()->required(), "database password")
+        ("database,", po::value<std::string>()->required(), "database name")
+        ("queue,", po::value<std::string>()->required(), "queue url")
+        ("topic,", po::value<std::string>()->required(), "topic name")
+        ("group_id,", po::value<std::string>()->required(), "consumer group_id name")
+        ("cache_servers,", po::value<std::string>()->required(), "iginite cache servers");
 
         po::variables_map vm;
         po::store(parse_command_line(argc, argv, desc), vm);
@@ -52,7 +62,8 @@ int main(int argc, char *argv[])
             {"group.id", Config::get().get_queue_group_id()},
             // Disable auto commit
             {"enable.auto.commit", false}};
-
+        
+        std::cout << "get consumer \n"; 
         // Create the consumer
         cppkafka::Consumer consumer(config);
 
@@ -64,16 +75,20 @@ int main(int argc, char *argv[])
         consumer.set_revocation_callback([](const cppkafka::TopicPartitionList &partitions)
                                          { std::cout << "Got revoked: " << partitions << std::endl; });
 
+        std::cout << "Subscribe \n";
         // Subscribe to the topic
         consumer.subscribe({Config::get().get_queue_topic()});
 
         std::cout << "Consuming messages from topic " << Config::get().get_queue_topic() << std::endl;
 
         // Now read lines and write them into kafka
+        std::cout << "running \n";
         while (running)
         {
             // Try to consume a message
+            std::cout << "running poll \n";
             cppkafka::Message msg = consumer.poll();
+            std::cout << "finish running poll\n";
             if (msg)
             {
                 // If we managed to get a message
