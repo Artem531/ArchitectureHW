@@ -86,9 +86,7 @@ int main(int argc, char *argv[])
         while (running)
         {
             // Try to consume a message
-            std::cout << "running poll \n";
             cppkafka::Message msg = consumer.poll();
-            std::cout << "finish running poll\n";
             if (msg)
             {
                 // If we managed to get a message

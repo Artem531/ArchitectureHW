@@ -106,8 +106,8 @@ services:
             ZOOKEEPER_INIT_LIMIT: 5
   
   kafka-node-1:
-      # image: wurstmeister/kafka
-      image: nyadesu/kafka-docker
+      image: wurstmeister/kafka
+      #image: nyadesu/kafka-docker
       container_name: kafka-node-1
       depends_on:
           - zookeeper
